@@ -1,11 +1,6 @@
-#include "colour.hpp"
-#include "ray.hpp"
-#include "vec3.hpp"
+#include "utility.hpp"
 
-#include <iostream>
-
-Colour ray_colour(const Ray &r);
-bool hit_sphere(const Point3 &center, double radius, const Ray &ray);
+Colour ray_colour(const Ray &ray, const HittableEntity &hittable_entity);
 
 int main() {
     auto aspect_ratio = 16.0 / 9.0;
@@ -13,6 +8,11 @@ int main() {
     // Calculate the image height, and ensure that it's at least 1.
     auto image_height = static_cast<int>(image_width / aspect_ratio);
     image_height = (image_height < 1) ? 1 : image_height;
+
+    // World
+    HittableEntityList world;
+    world.add(std::make_shared<Sphere>(Point3(0, 0, -1), 0.5));
+    world.add(std::make_shared<Sphere>(Point3(0, -100.5, -1), 100));
 
     // Camera
     auto focal_length = 1.0;
@@ -50,7 +50,7 @@ int main() {
             auto ray_direction = pixel_center - camera_centre;
             Ray ray(camera_centre, ray_direction);
 
-            Colour pixel_colour = ray_colour(ray);
+            Colour pixel_colour = ray_colour(ray, world);
             write_colour(std::cout, pixel_colour);
         }
     }
@@ -58,25 +58,15 @@ int main() {
     std::clog << "Done! \n";
 }
 
-Colour ray_colour(const Ray &ray) {
-    if (hit_sphere(Point3(0, 0, -1), 0.5, ray)) {
-        return Colour(1, 0, 0);
+Colour ray_colour(const Ray &ray, const HittableEntity &hittable_entity) {
+    HitRecord rec;
+
+    if (hittable_entity.hit(ray, 0, INFINITY, rec)) {
+        return 0.5 * (rec.normal + Colour(1, 1, 1));
     }
 
     Vec3 unit_direction = unit_vector(ray.direction());
     auto a = 0.5 * (unit_direction.y() + 1.0);
 
     return (1.0 - a) * Colour(1.0, 1.0, 1.0) + a * Colour(0.5, 0.7, 1.0);
-}
-
-bool hit_sphere(const Point3 &center, double radius, const Ray &ray) {
-    Vec3 oc = center - ray.origin();
-
-    auto a = dot(ray.direction(), ray.direction());
-    auto b = -2.0 * dot(ray.direction(), oc);
-    auto c = dot(oc, oc) - radius * radius;
-
-    auto discriminant = b * b - 4 * a * c;
-
-    return (discriminant >= 0);
 }
