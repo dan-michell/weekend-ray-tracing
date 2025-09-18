@@ -3,8 +3,6 @@
 #include "hittable_entity_list.hpp"
 #include "sphere.hpp"
 
-// TODO: Implement ImGUI interface
-
 int main() {
     // World
     HittableEntityList world;
