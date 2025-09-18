@@ -1,4 +1,7 @@
-#include "includes.hpp"
+#include "camera.hpp"
+#include "constants.hpp"
+#include "hittable_entity_list.hpp"
+#include "sphere.hpp"
 
 // TODO: Implement ImGUI interface
 
@@ -52,11 +55,11 @@ int main() {
     Camera camera{};
 
     camera.aspect_ratio = 16.0 / 9.0;
-    camera.image_width = 1920;
-    camera.samples_per_pixel = 500;
+    camera.image_width = 800;
+    camera.samples_per_pixel = 10;
     camera.max_depth = 50;
 
-    camera.v_fov = 20;
+    camera.v_fov = 90;
     camera.look_from = Point3(13, 2, 3);
     camera.look_at = Point3(0, 0, 0);
     camera.v_up = Vec3(0, 1, 0);
