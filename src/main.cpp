@@ -1,72 +1,68 @@
-#include "utility.hpp"
+#include "includes.hpp"
 
-Colour ray_colour(const Ray &ray, const HittableEntity &hittable_entity);
+// TODO: Implement ImGUI interface
 
 int main() {
-    auto aspect_ratio = 16.0 / 9.0;
-    int image_width = 400;
-    // Calculate the image height, and ensure that it's at least 1.
-    auto image_height = static_cast<int>(image_width / aspect_ratio);
-    image_height = (image_height < 1) ? 1 : image_height;
-
     // World
     HittableEntityList world;
-    world.add(std::make_shared<Sphere>(Point3(0, 0, -1), 0.5));
-    world.add(std::make_shared<Sphere>(Point3(0, -100.5, -1), 100));
 
-    // Camera
-    auto focal_length = 1.0;
-    auto camera_centre = Point3(0, 0, 0);
+    auto ground_Material{std::make_shared<Lambertian>(Colour(0.5, 0.5, 0.5))};
+    world.add(std::make_shared<Sphere>(Point3(0, -1000, 0), 1000, ground_Material));
 
-    // Viewport
-    auto viewport_height = 2.0;
-    // Viewport widths less than one are ok since they are real valued.
-    // The aspect ratio could be used as the RH operand, however this is an ideal ratio and in
-    // reality it is only approximate due to int rounding etc.
-    auto viewport_width = viewport_height * (static_cast<double>(image_width) / image_height);
+    for (int a = -11; a < 11; a++) {
+        for (int b = -11; b < 11; b++) {
+            auto choose_mat{random_double()};
+            Point3 centre(a + 0.9 * random_double(), 0.2, b + 0.9 * random_double());
 
-    // Calculate the vectors across the horizontal and down the vertical viewport edges.
-    auto viewport_u = Vec3(viewport_width, 0, 0);
-    // viewport_v y element negative as we start from top left and work downwards
-    auto viewport_v = Vec3(0, -viewport_height, 0);
+            if ((centre - Point3(4, 0.2, 0)).length() > 0.9) {
+                std::shared_ptr<Material> sphere_material;
 
-    // Calculate the horizontal and vertical delta vectors from pixel to pixel.
-    auto pixel_delta_u = viewport_u / image_width;
-    auto pixel_delta_v = viewport_v / image_height;
+                if (choose_mat < 0.8) {
+                    // diffuse
+                    auto albedo{Colour::random() * Colour::random()};
+                    sphere_material = std::make_shared<Lambertian>(albedo);
 
-    // Calculate the location of the upper left pixel.
-    auto viewport_upper_left =
-        camera_centre - Vec3(0, 0, focal_length) - viewport_u / 2 - viewport_v / 2;
-    auto pixel_0_0_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+                    world.add(std::make_shared<Sphere>(centre, 0.2, sphere_material));
+                } else if (choose_mat < 0.95) {
+                    // metal
+                    auto albedo{Colour::random(0.5, 1)};
+                    auto fuzz{random_double(0, 0.5)};
+                    sphere_material = std::make_shared<Metal>(albedo, fuzz);
 
-    // Render
-    std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+                    world.add(std::make_shared<Sphere>(centre, 0.2, sphere_material));
+                } else {
+                    // glass
+                    sphere_material = std::make_shared<Dielectric>(1.5);
 
-    for (int j = 0; j < image_height; j++) {
-        std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
-
-        for (int i = 0; i < image_width; i++) {
-            auto pixel_center = pixel_0_0_loc + (i * pixel_delta_u) + (j * pixel_delta_v);
-            auto ray_direction = pixel_center - camera_centre;
-            Ray ray(camera_centre, ray_direction);
-
-            Colour pixel_colour = ray_colour(ray, world);
-            write_colour(std::cout, pixel_colour);
+                    world.add(std::make_shared<Sphere>(centre, 0.2, sphere_material));
+                }
+            }
         }
     }
 
-    std::clog << "Done! \n";
-}
+    auto material1 = std::make_shared<Dielectric>(1.5);
+    world.add(std::make_shared<Sphere>(Point3(0, 1, 0), 1.0, material1));
 
-Colour ray_colour(const Ray &ray, const HittableEntity &hittable_entity) {
-    HitRecord rec;
+    auto material2 = std::make_shared<Lambertian>(Colour(0.4, 0.2, 0.1));
+    world.add(std::make_shared<Sphere>(Point3(-4, 1, 0), 1.0, material2));
 
-    if (hittable_entity.hit(ray, 0, INFINITY, rec)) {
-        return 0.5 * (rec.normal + Colour(1, 1, 1));
-    }
+    auto material3 = std::make_shared<Metal>(Colour(0.7, 0.6, 0.5), 0.0);
+    world.add(std::make_shared<Sphere>(Point3(4, 1, 0), 1.0, material3));
 
-    Vec3 unit_direction = unit_vector(ray.direction());
-    auto a = 0.5 * (unit_direction.y() + 1.0);
+    Camera camera{};
 
-    return (1.0 - a) * Colour(1.0, 1.0, 1.0) + a * Colour(0.5, 0.7, 1.0);
+    camera.aspect_ratio = 16.0 / 9.0;
+    camera.image_width = 1920;
+    camera.samples_per_pixel = 500;
+    camera.max_depth = 50;
+
+    camera.v_fov = 20;
+    camera.look_from = Point3(13, 2, 3);
+    camera.look_at = Point3(0, 0, 0);
+    camera.v_up = Vec3(0, 1, 0);
+
+    camera.defocus_angle = 0.6;
+    camera.focus_dist = 10.0;
+
+    camera.render(world);
 }

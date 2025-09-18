@@ -1,12 +1,16 @@
 #ifndef HITTABLE_ENTITY_HPP
 #define HITTABLE_ENTITY_HPP
 
+#include "interval.hpp"
 #include "ray.hpp"
+
+class Material;
 
 class HitRecord {
   public:
     Point3 p;
     Vec3 normal;
+    std::shared_ptr<Material> mat;
     double t;
     bool front_face;
 
@@ -23,7 +27,7 @@ class HittableEntity {
   public:
     virtual ~HittableEntity() = default;
 
-    virtual bool hit(const Ray &ray, double ray_tmin, double ray_tmax, HitRecord &rec) const = 0;
+    virtual bool hit(const Ray &ray, Interval ray_t, HitRecord &rec) const { return false; };
 };
 
 #endif

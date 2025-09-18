@@ -5,9 +5,10 @@
 
 class Sphere : public HittableEntity {
   public:
-    Sphere(const Point3 &center, double radius) : center{center}, radius{std::fmax(0, radius)} {}
+    Sphere(const Point3 &center, double radius, std::shared_ptr<Material> mat)
+        : center{center}, radius{std::fmax(0, radius)}, mat{mat} {}
 
-    bool hit(const Ray &ray, double ray_tmin, double ray_tmax, HitRecord &rec) const override {
+    bool hit(const Ray &ray, Interval ray_t, HitRecord &rec) const override {
         Vec3 oc = center - ray.origin();
         auto a = ray.direction().length_squared();
         auto h = dot(ray.direction(), oc);
@@ -23,10 +24,10 @@ class Sphere : public HittableEntity {
         // Find the nearest root that lies in the acceptable range.
         auto root = (h - sqrtd) / a;
 
-        if (root <= ray_tmin || ray_tmax <= root) {
+        if (!ray_t.surrounds(root)) {
             root = (h + sqrtd) / a;
 
-            if (root <= ray_tmin || ray_tmax <= root) {
+            if (!ray_t.surrounds(root)) {
                 return false;
             }
         }
@@ -35,6 +36,7 @@ class Sphere : public HittableEntity {
         rec.p = ray.at(rec.t);
         Vec3 outward_normal = (rec.p - center) / radius;
         rec.set_face_normal(ray, outward_normal);
+        rec.mat = mat;
 
         return true;
     }
@@ -42,6 +44,7 @@ class Sphere : public HittableEntity {
   private:
     Point3 center;
     double radius;
+    std::shared_ptr<Material> mat;
 };
 
 #endif
