@@ -1,5 +1,5 @@
 CPPC   = clang++
-FLAGS  = -std=c++23 -O2 -DNDEBUG -pedantic-errors -g
+FLAGS  = -std=c++23 -Wpedantic 
 RM     = rm -rf
 SRCDIR = src/
 BUILDDIR = build/

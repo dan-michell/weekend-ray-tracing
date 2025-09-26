@@ -9,14 +9,14 @@ class Camera {
   public:
     int image_width{800};
     double aspect_ratio{16.0 / 9.0};
-    int samples_per_pixel{100};
-    int max_depth{10};
+    int samples_per_pixel{100}; // Count of random samples per pixel
+    int max_depth{10};          // Number of ray bounces
 
     // Initialise camera view / orientation parameters
     double v_fov{90};
-    Point3 look_from{0, 0, 0};
-    Point3 look_at{0, 0, -1};
-    Vec3 v_up{0, 1, 0}; // Camera relative up direction
+    Point3 look_from{0, 0, 0}; // Position of camera
+    Point3 look_at{0, 0, -1};  // Where we're looking
+    Vec3 v_up{0, 1, 0};        // Camera relative up direction
 
     double defocus_angle{0}; // Variation angle of rays through each pixel
     double focus_dist{10};   // Distance from camera lookfrom point to plane of perfect focus
@@ -49,9 +49,9 @@ class Camera {
   private:
     int image_height{};
     Point3 camera_centre{};
-    Vec3 pixel_delta_u{}, pixel_delta_v{};
-    Vec3 pixel_0_0_loc{};
-    double pixel_samples_scale{};
+    Vec3 pixel_delta_u{}, pixel_delta_v{};   // Offset of pixel to the right and below
+    Vec3 pixel_0_0_loc{};                    // Location of pixel 0, 0
+    double pixel_samples_scale{};            // Colour scale factor for a sum of pixel samples
     Vec3 u{}, v{}, w{};                      // Camera frame basis vectors
     Vec3 defocus_disk_u{}, defocus_disk_v{}; // Defocus disk horizontal and vertical radius
 
